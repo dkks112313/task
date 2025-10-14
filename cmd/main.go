@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -19,7 +20,17 @@ type Event struct {
 	Metadata Metadata `json:"metadata"`
 }
 
-var savePlace []Event
+var savePlace []*Event
+
+func backgroundSaveToDatabase() {
+	ticker := time.NewTicker(4 * time.Hour)
+
+	go func() {
+		for range ticker.C {
+			fmt.Println("Working")
+		}
+	}()
+}
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +47,10 @@ func main() {
 				err := decoder.Decode(&event)
 				if err != nil {
 					fmt.Errorf("Error, when decode json")
+					return
 				}
+
+				savePlace = append(savePlace, &event)
 
 				println(event.UserID)
 				println(event.Action)

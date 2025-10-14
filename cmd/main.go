@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Metadata struct {
@@ -23,6 +25,8 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Hello")
 	})
+
+	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc("/event", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {

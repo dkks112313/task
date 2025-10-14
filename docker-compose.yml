@@ -6,25 +6,32 @@ services:
     container_name: myapp
     ports:
       - "8080:8080"
+  
   postgres:
     image: postgres:latest
+    container_name: postgres
     ports:
       - "5432:5432"
     depends_on:
       - app
+  
   prometheus:
     image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
+    container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
     depends_on:
       - app
+  
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
     ports:
       - "3000:3000"
-    volumes:
-      - ./grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
-      - app
+      - prometheus

@@ -14,6 +14,8 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=admin
+    volumes:
+      - ./db_init:/docker-entrypoint-initdb.d
     depends_on:
       - app
   

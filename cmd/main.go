@@ -15,9 +15,10 @@ type Metadata struct {
 }
 
 type Event struct {
-	UserID   uint     `json:"user_id"`
-	Action   string   `json:"action"`
-	Metadata Metadata `json:"metadata"`
+	UserID    uint      `json:"user_id"`
+	Action    string    `json:"action"`
+	Metadata  Metadata  `json:"metadata"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 var savePlace []*Event
@@ -40,6 +41,14 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc("/event", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			query := r.URL.Query()
+			_ = query.Get("user_id")
+			_ = query.Get("action")
+			_ = query.Get("metadata")
+			_ = query.Get("timestamp")
+		}
+
 		if r.Method == http.MethodPost {
 			if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 				var event Event
@@ -55,6 +64,9 @@ func main() {
 				println(event.UserID)
 				println(event.Action)
 				println(event.Metadata.Path)
+			} else {
+				fmt.Errorf("Unkorrect content-type")
+				return
 			}
 		}
 	})

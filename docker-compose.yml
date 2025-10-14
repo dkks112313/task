@@ -3,7 +3,7 @@ version: "3.9"
 services:
   app:
     build: .
-    container_name: myapp
+    container_name: app
     ports:
       - "8080:8080"
   
@@ -13,11 +13,11 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=admin
+      POSTGRES_DB: "basedb"
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "admin"
     volumes:
       - ./db_init:/docker-entrypoint-initdb.d
-    depends_on:
-      - app
   
   prometheus:
     image: prom/prometheus:latest

@@ -20,7 +20,13 @@ export default function Filters({ onApply }: FiltersProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onApply(filters);
+        const utcFilters: EventFilters = {
+            ...filters,
+            from: filters.from ? new Date(filters.from).toISOString() : "",
+            to: filters.to ? new Date(filters.to).toISOString() : "",
+        };
+
+        onApply(utcFilters);
     };
 
     return (
@@ -43,7 +49,8 @@ export default function Filters({ onApply }: FiltersProps) {
                     <label className="block text-sm">From</label>
                     <input
                             name="from"
-                            type="date"
+                            type="datetime-local"
+                            step="1"
                             value={filters.from}
                             onChange={handleChange}
                             className="border rounded px-2 py-1"
@@ -54,7 +61,8 @@ export default function Filters({ onApply }: FiltersProps) {
                     <label className="block text-sm">To</label>
                     <input
                             name="to"
-                            type="date"
+                            type="datetime-local"
+                            step="1"
                             value={filters.to}
                             onChange={handleChange}
                             className="border rounded px-2 py-1"

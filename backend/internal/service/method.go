@@ -38,14 +38,16 @@ func MethodPostForMainRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if from := query.Get("from"); from != "" {
-		if t, err := time.Parse("2006-01-02", from); err == nil {
+		if t, err := time.Parse(time.RFC3339, from); err == nil {
+			t = t.UTC()
 			args = append(args, t)
 			conditions = append(conditions, fmt.Sprintf("time_event >= $%d", len(args)))
 		}
 	}
 
 	if to := query.Get("to"); to != "" {
-		if t, err := time.Parse("2006-01-02", to); err == nil {
+		if t, err := time.Parse(time.RFC3339, to); err == nil {
+			t = t.UTC()
 			args = append(args, t)
 			conditions = append(conditions, fmt.Sprintf("time_event <= $%d", len(args)))
 		}

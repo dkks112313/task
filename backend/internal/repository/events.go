@@ -9,11 +9,11 @@ import (
 	"github.com/dkks112313/task/models"
 )
 
-func SelectFromEvents(w http.ResponseWriter, sqlQuery string, args []interface{}) {
+func SelectFromEvents(w http.ResponseWriter, sqlQuery string, args []interface{}) error {
 	rows, err := DB.Query(sqlQuery, args...)
 	if err != nil {
 		log.Println("Error fetching events:", err)
-		return
+		return err
 	}
 	defer rows.Close()
 
@@ -24,7 +24,7 @@ func SelectFromEvents(w http.ResponseWriter, sqlQuery string, args []interface{}
 		var t time.Time
 		if err := rows.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &t); err != nil {
 			log.Println("Error while scanning row:", err)
-			return
+			return err
 		}
 		event.Timestamp = t.Format(time.RFC3339)
 		events = append(events, event)
@@ -33,8 +33,10 @@ func SelectFromEvents(w http.ResponseWriter, sqlQuery string, args []interface{}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(events); err != nil {
 		log.Println("Error encoding json")
-		return
+		return err
 	}
+
+	return nil
 }
 
 func InsertIntoEvents(event models.Event) error {
@@ -48,11 +50,11 @@ func InsertIntoEvents(event models.Event) error {
 	return nil
 }
 
-func InsertIntoUserStats(start_time *time.Time) {
-	row, err := DB.Query("SELECT * FROM events WHERE time_event > $1", start_time)
+func InsertIntoUserStats(start_time *time.Time) error {
+	row, err := DB.Query("SELECT * FROM events WHERE time_event >= $1", start_time)
 	if err != nil {
 		log.Println("Uncorrect select data from time")
-		return
+		return err
 	}
 	defer row.Close()
 
@@ -65,7 +67,7 @@ func InsertIntoUserStats(start_time *time.Time) {
 		err := row.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp)
 		if err != nil {
 			log.Println("Error, reading from event table")
-			return
+			return err
 		}
 
 		user_id_count[event.UserID] += 1
@@ -76,9 +78,11 @@ func InsertIntoUserStats(start_time *time.Time) {
 		_, err := DB.Exec("INSERT INTO user_event_stats (user_id, start_time, end_time, event_count) VALUES ($1, $2, $3, $4);", k, start_time, end_time, v)
 		if err != nil {
 			log.Println("Error, insert row into user_event_stats")
-			return
+			return err
 		}
 	}
 
 	*start_time = time.Now()
+
+	return nil
 }

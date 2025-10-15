@@ -1,4 +1,4 @@
-module task
+module github.com/dkks112313/task
 
 go 1.25.0
 

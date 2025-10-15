@@ -3,25 +3,38 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
-const (
-	dbType   = "postgres"
-	name     = "user"
-	password = "admin"
-	host     = "postgres"
-	port     = 5432
-	dbname   = "basedb"
-)
+var DB *sql.DB
 
-func InitDB() *sql.DB {
+func readEnv() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Println("Error, opening env file")
+		return
+	}
+}
+
+func InitDB() {
+	readEnv()
+
+	dbType := os.Getenv("DB_TYPE")
+	name := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	dbname := os.Getenv("DB_NAME")
+
 	dbConnect := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=disable", name, password, host, port, dbname)
-	db, err := sql.Open(dbType, dbConnect)
+	dbOpen, err := sql.Open(dbType, dbConnect)
 	if err != nil {
 		panic(err)
 	}
 
-	return db
+	DB = dbOpen
 }

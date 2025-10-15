@@ -1,5 +1,5 @@
 CREATE TABLE events (
-    id          int PRIMARY KEY,
+    id          SERIAL PRIMARY KEY,
     user_id     int NOT NULL,
     action      text NOT NULL,
     metadata    text NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE events (
 );
 
 CREATE TABLE user_event_stats (
-    id	        int PRIMARY KEY,
+    id	        SERIAL PRIMARY KEY,
     user_id     int NOT NULL,
     start_time	timestamp NOT NULL,
     end_time	timestamp NOT NULL,

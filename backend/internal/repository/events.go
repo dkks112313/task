@@ -17,14 +17,16 @@ func SelectFromEvents(w http.ResponseWriter, sqlQuery string, args []interface{}
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	var events []models.EventSend
 	for rows.Next() {
-		var event models.Event
+		var event models.EventSend
 		var id int
-		if err := rows.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp); err != nil {
+		var t time.Time
+		if err := rows.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &t); err != nil {
 			log.Println("Error while scanning row:", err)
 			return
 		}
+		event.Timestamp = t.Format(time.RFC3339)
 		events = append(events, event)
 	}
 
@@ -69,8 +71,9 @@ func InsertIntoUserStats(start_time *time.Time) {
 		user_id_count[event.UserID] += 1
 	}
 
+	end_time := time.Now()
 	for k, v := range user_id_count {
-		_, err := DB.Exec("INSERT INTO user_event_stats (user_id, start_time, end_time, event_count) VALUES ($1, $2, $3, $4);", k, start_time, time.Now(), v)
+		_, err := DB.Exec("INSERT INTO user_event_stats (user_id, start_time, end_time, event_count) VALUES ($1, $2, $3, $4);", k, start_time, end_time, v)
 		if err != nil {
 			log.Println("Error, insert row into user_event_stats")
 			return

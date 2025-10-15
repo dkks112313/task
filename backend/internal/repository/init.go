@@ -6,23 +6,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
-func readEnv() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Println("Error, opening env file")
-		return
-	}
-}
-
 func InitDB() {
-	readEnv()
-
 	dbType := os.Getenv("DB_TYPE")
 	name := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")

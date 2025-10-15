@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -26,11 +25,41 @@ type Event struct {
 }
 
 func backgroundSaveToDatabase() {
+	start_time := time.Now()
 	ticker := time.NewTicker(4 * time.Hour)
 
 	go func() {
 		for range ticker.C {
-			fmt.Println("Working")
+			row, err := db.Query("SELECT * FROM events WHERE time_event > $1", start_time)
+			if err != nil {
+				log.Println("Uncorrect select data from time")
+				return
+			}
+			defer row.Close()
+
+			user_id_count := map[uint]int{}
+			for row.Next() {
+				log.Println("New row")
+
+				var event Event
+				var id int
+				err := row.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp)
+				if err != nil {
+					log.Println("Error, reading from event table")
+					return
+				}
+
+				user_id_count[event.UserID] += 1
+			}
+
+			for k, v := range user_id_count {
+				_, err := db.Exec("INSERT INTO user_event_stats (user_id, start_time, end_time, event_count) VALUES ($1, $2, $3, $4);", k, start_time, time.Now(), v)
+				if err != nil {
+					log.Println("Error, insert row into user_event_stats")
+					return
+				}
+			}
+			start_time = time.Now()
 		}
 	}()
 }
@@ -55,12 +84,7 @@ func main() {
 				log.Println("Invalid user_id")
 				return
 			}
-			/*
-				action := query.Get("action")
-				metadata := query.Get("metadata")
-			*/
-			//row, err := db.Query("SELECT user_id, action, metadata, time_event FROM events WHERE user_id=$1 AND action=$2 AND metadata=$3",
-			//	user_id, action, metadata)
+
 			row, err := db.Query("SELECT * FROM events WHERE user_id=$1", user_id)
 			if err != nil {
 				log.Println("Error, get data from event table")

@@ -3,26 +3,17 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"task/internal/repository"
+	"task/models"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
-
-type Metadata struct {
-	Path string `json:"page"`
-}
-
-type Event struct {
-	UserID    uint      `json:"user_id"`
-	Action    string    `json:"action"`
-	Metadata  Metadata  `json:"metadata"`
-	Timestamp time.Time `json:"timestamp"`
-}
 
 func backgroundSaveToDatabase() {
 	start_time := time.Now()
@@ -41,7 +32,7 @@ func backgroundSaveToDatabase() {
 			for row.Next() {
 				log.Println("New row")
 
-				var event Event
+				var event models.Event
 				var id int
 				err := row.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp)
 				if err != nil {
@@ -78,39 +69,67 @@ func main() {
 	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			query := r.URL.Query()
-			id := query.Get("user_id")
-			user_id, err := strconv.Atoi(id)
-			if err != nil {
-				log.Println("Invalid user_id")
-				return
+
+			var conditions []string
+			var args []interface{}
+
+			if id := query.Get("user_id"); id != "" {
+				if userID, err := strconv.Atoi(id); err == nil {
+					args = append(args, userID)
+					conditions = append(conditions, fmt.Sprintf("user_id=$%d", len(args)))
+				}
 			}
 
-			row, err := db.Query("SELECT * FROM events WHERE user_id=$1", user_id)
+			if action := query.Get("action"); action != "" {
+				args = append(args, action)
+				conditions = append(conditions, fmt.Sprintf("action=$%d", len(args)))
+			}
+
+			if metadata := query.Get("metadata"); metadata != "" {
+				args = append(args, metadata)
+				conditions = append(conditions, fmt.Sprintf("metadata=$%d", len(args)))
+			}
+
+			if from := query.Get("from"); from != "" {
+				if t, err := time.Parse("2006-01-02", from); err == nil {
+					args = append(args, t)
+					conditions = append(conditions, fmt.Sprintf("time_event >= $%d", len(args)))
+				}
+			}
+
+			if to := query.Get("to"); to != "" {
+				if t, err := time.Parse("2006-01-02", to); err == nil {
+					args = append(args, t)
+					conditions = append(conditions, fmt.Sprintf("time_event <= $%d", len(args)))
+				}
+			}
+
+			sqlQuery := "SELECT id, user_id, action, metadata, time_event FROM events"
+			if len(conditions) > 0 {
+				sqlQuery += " WHERE " + strings.Join(conditions, " AND ")
+			}
+
+			rows, err := db.Query(sqlQuery, args...)
 			if err != nil {
-				log.Println("Error, get data from event table")
+				log.Println("Error fetching events:", err)
 				return
 			}
-			defer row.Close()
+			defer rows.Close()
 
-			for row.Next() {
-				log.Println("New row")
-
-				var event Event
+			for rows.Next() {
+				var event models.Event
 				var id int
-				err := row.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp)
-				if err != nil {
-					log.Println("Error, reading from event table")
+				if err := rows.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp); err != nil {
+					log.Println("Error scanning row:", err)
 					return
 				}
-
 				log.Println(event)
 			}
-			log.Println("Success get data from event table")
 		}
 
 		if r.Method == http.MethodPost {
 			if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
-				var event Event
+				var event models.Event
 				decoder := json.NewDecoder(r.Body)
 				err := decoder.Decode(&event)
 				if err != nil {
@@ -119,7 +138,7 @@ func main() {
 				}
 
 				_, err = db.Exec("INSERT INTO events (user_id, action, metadata, time_event) VALUES ($1, $2, $3, $4);",
-					event.UserID, event.Action, event.Metadata.Path, event.Timestamp)
+					event.UserID, event.Action, event.Metadata.Path, time.Now())
 				if err != nil {
 					log.Println("Error, insert data in event table")
 					return

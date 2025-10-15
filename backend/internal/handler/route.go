@@ -16,6 +16,7 @@ import (
 func HandlerEvents(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		query := r.URL.Query()
 
 		var conditions []string
@@ -57,7 +58,7 @@ func HandlerEvents(w http.ResponseWriter, r *http.Request) {
 			sqlQuery += " WHERE " + strings.Join(conditions, " AND ")
 		}
 
-		repository.SelectFromEvents(sqlQuery, args)
+		repository.SelectFromEvents(w, sqlQuery, args)
 	case http.MethodPost:
 		if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 			var event models.Event

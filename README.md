@@ -44,7 +44,26 @@ DB_NAME=basedb
 ```
 
 ### Local Development
+Local:
+```bash
+# Clone the repository
+git clone https://github.com/dkks112313/task.git
+cd task
 
+# Copy environment file(Oprional, can create)
+cp .env.example .env
+
+# Start services
+cd backend
+go mod download
+go run ./cmd/main.go
+
+cd ../frontend
+npm i
+npm run dev
+```
+
+Docker:
 ```bash
 # Clone the repository
 git clone https://github.com/dkks112313/task.git

@@ -1,7 +1,6 @@
 /backend/.env
 /backend/go.sum
 
-/frontend/package-lock.json
 /frontend/logs
 /frontend/*.log
 /frontend/npm-debug.log*

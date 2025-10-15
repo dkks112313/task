@@ -3,7 +3,7 @@ export interface Event {
     user_id: number;
     action: string;
     metadata: string;
-    time_event: string;
+    timestamp: string;
 }
 
 export interface EventFilters {

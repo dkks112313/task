@@ -9,6 +9,8 @@ export default function EventsTable({ events }: EventsTableProps) {
         return <p className="p-4 text-gray-600">Don't have events</p>;
     }
 
+    console.log("Received events:", events);
+
     return (
             <table className="min-w-full border-collapse border mt-4">
                 <thead>
@@ -25,7 +27,7 @@ export default function EventsTable({ events }: EventsTableProps) {
                     <td className="border p-2">{e.user_id}</td>
                     <td className="border p-2">{e.action}</td>
                     <td className="border p-2">{typeof e.metadata === "string" ? e.metadata : JSON.stringify(e.metadata)}</td>
-                    <td className="border p-2">{new Date(e.time_event).toLocaleString()}</td>
+                    <td className="border p-2">{new Date(e.timestamp).toLocaleString()}</td>
                     </tr>
                 ))}
                 </tbody>

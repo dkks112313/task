@@ -18,12 +18,29 @@ A Go REST API service for tracking user activity events and generating daily agg
 - **Containerization**: Docker & Docker Compose
 - **Monitoring**: Grafana (optional)
 
+## Ports
+- **Backend**: app:8080
+- **Database**: postgres:5432
+- **Frontend**: interface:80
+- **Grafana**: grafana:3000
+- **Prometheus**: prometheus:9090
+
 ## Quick Start
 
 ### Prerequisites
 
 - Docker
 - Docker Compose
+
+### Example .env file
+Create .env file into root backend folder
+``` bash
+DB_TYPE=postgres
+DB_USER=user
+DB_PASSWORD=admin
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=basedb
 
 ### Local Development
 

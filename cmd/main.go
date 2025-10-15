@@ -1,10 +1,14 @@
-/*package main
+package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"strconv"
 	"strings"
+	"task/internal/repository"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -21,8 +25,6 @@ type Event struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-var savePlace []*Event
-
 func backgroundSaveToDatabase() {
 	ticker := time.NewTicker(4 * time.Hour)
 
@@ -33,20 +35,53 @@ func backgroundSaveToDatabase() {
 	}()
 }
 
+var db *sql.DB
+
+func init() {
+	db = repository.InitDB()
+}
+
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Hello")
-	})
+	backgroundSaveToDatabase()
 
 	http.Handle("/metrics", promhttp.Handler())
 
-	http.HandleFunc("/event", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			query := r.URL.Query()
-			_ = query.Get("user_id")
-			_ = query.Get("action")
-			_ = query.Get("metadata")
-			_ = query.Get("timestamp")
+			id := query.Get("user_id")
+			user_id, err := strconv.Atoi(id)
+			if err != nil {
+				log.Println("Invalid user_id")
+				return
+			}
+			/*
+				action := query.Get("action")
+				metadata := query.Get("metadata")
+			*/
+			//row, err := db.Query("SELECT user_id, action, metadata, time_event FROM events WHERE user_id=$1 AND action=$2 AND metadata=$3",
+			//	user_id, action, metadata)
+			row, err := db.Query("SELECT * FROM events WHERE user_id=$1", user_id)
+			if err != nil {
+				log.Println("Error, get data from event table")
+				return
+			}
+			defer row.Close()
+
+			for row.Next() {
+				log.Println("New row")
+
+				var event Event
+				var id int
+				err := row.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp)
+				if err != nil {
+					log.Println("Error, reading from event table")
+					return
+				}
+
+				log.Println(event)
+			}
+			log.Println("Success get data from event table")
 		}
 
 		if r.Method == http.MethodPost {
@@ -55,18 +90,20 @@ func main() {
 				decoder := json.NewDecoder(r.Body)
 				err := decoder.Decode(&event)
 				if err != nil {
-					fmt.Errorf("Error, when decode json")
+					log.Println("Error, when decode json")
 					return
 				}
 
-				savePlace = append(savePlace, &event)
+				_, err = db.Exec("INSERT INTO events (user_id, action, metadata, time_event) VALUES ($1, $2, $3, $4);",
+					event.UserID, event.Action, event.Metadata.Path, event.Timestamp)
+				if err != nil {
+					log.Println("Error, insert data in event table")
+					return
+				}
 
-				println(event.UserID)
-				println(event.Action)
-				println(event.Metadata.Path)
+				log.Println("Success insert into event table")
 			} else {
-				fmt.Errorf("Unkorrect content-type")
-				return
+				log.Fatalln("Unсorrect content type")
 			}
 		}
 	})
@@ -74,61 +111,4 @@ func main() {
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		panic(err)
 	}
-}
-*/
-
-package main
-
-import (
-	"database/sql"
-	"fmt"
-	"log"
-	"time"
-
-	_ "github.com/lib/pq"
-)
-
-const (
-	dbType   = "postgres"
-	name     = "user"
-	password = "admin"
-	host     = "postgres"
-	port     = 5432
-	dbname   = "basedb"
-)
-
-func InitDB() *sql.DB {
-	dbConnect := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=disable", name, password, host, port, dbname)
-	db, err := sql.Open(dbType, dbConnect)
-	if err != nil {
-		panic(err)
-	}
-
-	return db
-}
-
-var db *sql.DB
-
-func init() {
-	db = InitDB()
-}
-
-type Metadata struct {
-	Path string
-}
-
-type Event struct {
-	UserID    uint
-	Action    string
-	Metadata  Metadata
-	Timestamp time.Time
-}
-
-func main() {
-	_, err := db.Query("INSERT INTO events (id, user_id, action, metadata, time_event) VALUES (1, 1, 'dds', 'brbr', '2025-10-14 12:30:00');")
-	if err != nil {
-		panic(err)
-	}
-
-	log.Println("All ok")
 }

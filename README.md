@@ -1,6 +1,6 @@
 # User Activity Tracking Service
 
-A Go REST API service for tracking user activity events and generating daily aggregated statistics.
+A Go REST API service for tracking user activity events and generating 4-hours aggregated statistics.
 
 ## Features
 
@@ -41,6 +41,7 @@ DB_PASSWORD=admin
 DB_HOST=postgres
 DB_PORT=5432
 DB_NAME=basedb
+```
 
 ### Local Development
 
@@ -49,8 +50,24 @@ DB_NAME=basedb
 git clone https://github.com/dkks112313/task.git
 cd task
 
-# Copy environment file
+# Copy environment file(Oprional, can create)
 cp .env.example .env
 
 # Start services
 docker-compose up -d
+```
+
+## How work with back-end
+
+### How to send event to back-end
+You can send to route POST /events, like this json
+``` bash
+{
+    "user_id": 1,
+    "action": "click",
+    "metadata": {"page": "/page"}
+}
+```
+
+### How to get event from back-end
+You can get from route GET /events?query=, like this

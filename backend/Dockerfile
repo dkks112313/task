@@ -8,5 +8,6 @@ RUN go build -o main ./cmd/main.go
 FROM debian:bookworm-slim
 WORKDIR /app
 COPY --from=builder /app/main .
+COPY backend/wait-for-it.sh .
 
-CMD ["./main"]
+CMD ["./wait-for-it.sh", "postgres:5432", "--", "./main"]

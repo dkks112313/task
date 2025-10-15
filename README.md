@@ -29,14 +29,11 @@ A Go REST API service for tracking user activity events and generating daily agg
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd user-activity-service
+git clone https://github.com/dkks112313/task.git
+cd task
 
 # Copy environment file
 cp .env.example .env
 
 # Start services
 docker-compose up -d
-
-# Run migrations
-docker-compose exec api go run cmd/migrate/main.go

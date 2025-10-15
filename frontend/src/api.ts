@@ -5,7 +5,7 @@ export async function fetchEvents(filters: EventFilters): Promise<Event[]> {
             Object.entries(filters).filter(([_, v]) => v && v !== "")
     );
 
-    const res = await fetch(`http://locahost:8080/events?${params.toString()}`);
+    const res = await fetch(`http://localhost:8080/events?${params.toString()}`);
 
     if (!res.ok) {
         throw new Error(`Error when give events (${res.status})`);

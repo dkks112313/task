@@ -1,13 +1,15 @@
 package repository
 
 import (
+	"encoding/json"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/dkks112313/task/models"
 )
 
-func SelectFromEvents(sqlQuery string, args []interface{}) {
+func SelectFromEvents(w http.ResponseWriter, sqlQuery string, args []interface{}) {
 	rows, err := DB.Query(sqlQuery, args...)
 	if err != nil {
 		log.Println("Error fetching events:", err)
@@ -15,6 +17,7 @@ func SelectFromEvents(sqlQuery string, args []interface{}) {
 	}
 	defer rows.Close()
 
+	var events []models.Event
 	for rows.Next() {
 		var event models.Event
 		var id int
@@ -22,7 +25,13 @@ func SelectFromEvents(sqlQuery string, args []interface{}) {
 			log.Println("Error while scanning row:", err)
 			return
 		}
-		log.Println(event)
+		events = append(events, event)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(events); err != nil {
+		log.Println("Error encoding json")
+		return
 	}
 }
 
@@ -34,7 +43,6 @@ func InsertIntoEvents(event models.Event) error {
 		return err
 	}
 
-	log.Println("Success insert into event table")
 	return nil
 }
 

@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:latest AS builder
 WORKDIR /app
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download

@@ -2,16 +2,16 @@ package main
 
 import (
 	"net/http"
-	"task/internal/handler"
-	"task/internal/repository"
-	"task/internal/service"
+
+	"github.com/dkks112313/task/internal/handler"
+	"github.com/dkks112313/task/internal/repository"
+	"github.com/dkks112313/task/internal/service"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
 	repository.InitDB()
-
 	service.BackgroundTaskSaveToDatabase()
 
 	http.Handle("/metrics", promhttp.Handler())

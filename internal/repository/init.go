@@ -30,10 +30,14 @@ func InitDB() {
 	port := os.Getenv("DB_PORT")
 	dbname := os.Getenv("DB_NAME")
 
-	dbConnect := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=disable", name, password, host, port, dbname)
+	dbConnect := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", name, password, host, port, dbname)
 	dbOpen, err := sql.Open(dbType, dbConnect)
 	if err != nil {
-		panic(err)
+		log.Fatalln("Error opening db connection")
+	}
+
+	if err := dbOpen.Ping(); err != nil {
+		log.Fatalln("Error when checking data base connection")
 	}
 
 	DB = dbOpen

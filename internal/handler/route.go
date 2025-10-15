@@ -56,22 +56,7 @@ func HandlerEvents(w http.ResponseWriter, r *http.Request) {
 			sqlQuery += " WHERE " + strings.Join(conditions, " AND ")
 		}
 
-		rows, err := repository.DB.Query(sqlQuery, args...)
-		if err != nil {
-			log.Println("Error fetching events:", err)
-			return
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			var event models.Event
-			var id int
-			if err := rows.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp); err != nil {
-				log.Println("Error scanning row:", err)
-				return
-			}
-			log.Println(event)
-		}
+		repository.SelectFromEvents(sqlQuery, args)
 	case http.MethodPost:
 		if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 			var event models.Event
@@ -82,8 +67,7 @@ func HandlerEvents(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			_, err = repository.DB.Exec("INSERT INTO events (user_id, action, metadata, time_event) VALUES ($1, $2, $3, $4);",
-				event.UserID, event.Action, event.Metadata.Path, time.Now())
+			err = repository.InsertIntoEvents(event)
 			if err != nil {
 				log.Println("Error, insert data in event table")
 				return

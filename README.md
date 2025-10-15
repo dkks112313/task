@@ -57,7 +57,7 @@ cp .env.example .env
 docker-compose up -d
 ```
 
-##Frontend
+## Frontend
 
 Access at http://localhost
 
@@ -65,8 +65,8 @@ Use filters panel to query events by user_id, from, to, action, metadata.
 
 Events table displays: User ID, Action, Metadata, ISO-8601 Timestamp.
 
-##Back-end API
-###Create Event
+## Back-end API
+### Create Event
 
 POST /events
 Request body example:
@@ -78,7 +78,7 @@ Request body example:
 }
 ```
 
-###Retrieve Events
+### Retrieve Events
 ``` bash
 GET /events with optional query parameters:
 ```
@@ -96,7 +96,7 @@ Example:
 
 GET /events?user_id=1&from=2025-10-15T10:00:00&to=2025-10-15T22:00:00&action=click
 
-##Aggregation Job
+## Aggregation Job
 
 Runs every 4 hours.
 
@@ -109,7 +109,7 @@ user_id, start_time, end_time, event_count.
 
 Updates the last aggregation timestamp for next run.
 
-##Optional Monitoring
+## Optional Monitoring
 
 Prometheus collects metrics from the Go service.
 
@@ -117,7 +117,7 @@ Grafana dashboards can visualize event counts and system metrics.
 
 Ports: prometheus:9090, grafana:3000.
 
-##Notes
+## Notes
 
 All timestamps are stored in UTC (ISO-8601) in the database.
 

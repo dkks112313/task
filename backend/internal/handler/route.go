@@ -77,7 +77,7 @@ func HandlerEvents(w http.ResponseWriter, r *http.Request) {
 
 			log.Println("Success insert into event table")
 		} else {
-			log.Fatalln("Unсorrect content type")
+			log.Fatalln("Uncorrect content type")
 		}
 	}
 }

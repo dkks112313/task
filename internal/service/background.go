@@ -1,8 +1,9 @@
 package service
 
 import (
-	"task/internal/repository"
 	"time"
+
+	"github.com/dkks112313/task/internal/repository"
 )
 
 func BackgroundTaskSaveToDatabase() {

@@ -2,8 +2,9 @@ package repository
 
 import (
 	"log"
-	"task/models"
 	"time"
+
+	"github.com/dkks112313/task/models"
 )
 
 func SelectFromEvents(sqlQuery string, args []interface{}) {

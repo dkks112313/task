@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"task/internal/repository"
-	"task/models"
 	"time"
+
+	"github.com/dkks112313/task/internal/repository"
+	"github.com/dkks112313/task/models"
 )
 
 func HandlerEvents(w http.ResponseWriter, r *http.Request) {

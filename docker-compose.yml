@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: "user"
       POSTGRES_PASSWORD: "admin"
     volumes:
-      - ./backend/db_init:/docker-entrypoint-initdb.d
+      - ./db_init:/docker-entrypoint-initdb.d
   
   prometheus:
     image: prom/prometheus:latest

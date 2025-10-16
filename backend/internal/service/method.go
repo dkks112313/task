@@ -13,7 +13,7 @@ import (
 	"github.com/dkks112313/task/models"
 )
 
-func MethodPostForMainRoute(w http.ResponseWriter, r *http.Request) {
+func MethodGetForMainRoute(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	query := r.URL.Query()
 
@@ -64,7 +64,7 @@ func MethodPostForMainRoute(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func MethodGetForMainRoute(w http.ResponseWriter, r *http.Request) {
+func MethodPostForMainRoute(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 		var event models.Event
 		decoder := json.NewDecoder(r.Body)

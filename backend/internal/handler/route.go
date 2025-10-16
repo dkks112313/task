@@ -9,8 +9,8 @@ import (
 func HandlerEvents(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		service.MethodPostForMainRoute(w, r)
-	case http.MethodPost:
 		service.MethodGetForMainRoute(w, r)
+	case http.MethodPost:
+		service.MethodPostForMainRoute(w, r)
 	}
 }

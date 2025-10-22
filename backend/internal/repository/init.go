@@ -9,9 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var DB *sql.DB
-
-func InitDB() {
+func InitDB() *sql.DB {
 	dbType := os.Getenv("DB_TYPE")
 	name := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
@@ -29,5 +27,5 @@ func InitDB() {
 		log.Fatalln("Error when checking data base connection")
 	}
 
-	DB = dbOpen
+	return dbOpen
 }

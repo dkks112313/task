@@ -6,11 +6,21 @@ import (
 	"github.com/dkks112313/task/internal/service"
 )
 
-func HandlerEvents(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		service.MethodGetForMainRoute(w, r)
-	case http.MethodPost:
-		service.MethodPostForMainRoute(w, r)
+type Routes struct {
+	eventService service.EventService
+}
+
+func NewRoutes(eventService service.EventService) *Routes {
+	return &Routes{
+		eventService: eventService,
 	}
+}
+
+func (r *Routes) HandlerEvents() *http.ServeMux {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /events", r.eventService.MethodGetForMainRoute)
+	mux.HandleFunc("POST /events", r.eventService.MethodPostForMainRoute)
+
+	return mux
 }

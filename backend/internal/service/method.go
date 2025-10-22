@@ -13,7 +13,20 @@ import (
 	"github.com/dkks112313/task/models"
 )
 
-func MethodGetForMainRoute(w http.ResponseWriter, r *http.Request) {
+type EventService interface {
+	MethodGetForMainRoute(w http.ResponseWriter, r *http.Request)
+	MethodPostForMainRoute(w http.ResponseWriter, r *http.Request)
+}
+
+type eventService struct {
+	repo repository.EventRepository
+}
+
+func InitServiceEvents(repo repository.EventRepository) EventService {
+	return &eventService{repo: repo}
+}
+
+func (s *eventService) MethodGetForMainRoute(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	query := r.URL.Query()
 
@@ -58,13 +71,15 @@ func MethodGetForMainRoute(w http.ResponseWriter, r *http.Request) {
 		sqlQuery += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	err := repository.SelectFromEvents(w, sqlQuery, args)
+	err := s.repo.SelectFromEvents(w, sqlQuery, args)
 	if err != nil {
 		http.Error(w, "Uncorrect filter data", http.StatusBadRequest)
 	}
 }
 
-func MethodPostForMainRoute(w http.ResponseWriter, r *http.Request) {
+func (s *eventService) MethodPostForMainRoute(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 		var event models.Event
 		decoder := json.NewDecoder(r.Body)
@@ -75,7 +90,7 @@ func MethodPostForMainRoute(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = repository.InsertIntoEvents(event)
+		err = s.repo.InsertIntoEvents(event)
 		if err != nil {
 			log.Println("Error, insert data in event table")
 			http.Error(w, "Uncorrect insert data in event table", http.StatusBadRequest)

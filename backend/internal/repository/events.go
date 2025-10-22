@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -11,22 +12,25 @@ import (
 )
 
 type EventRepository interface {
-	SelectFromEvents(w http.ResponseWriter, sqlQuery string, args []interface{}) error
-	InsertIntoEvents(event models.Event) error
-	InsertIntoUserStats(start_time *time.Time) error
+	SelectFromEvents(ctx context.Context, w http.ResponseWriter, sqlQuery string, args []interface{}) error
+	InsertIntoEvents(ctx context.Context, event models.Event) error
+	InsertIntoUserStats(ctx context.Context, start_time *time.Time) error
 }
 
 type eventRepository struct {
 	db *sql.DB
 }
 
-func InitRepositoryEvents() EventRepository {
-	db := initDB()
-	return &eventRepository{db: db}
+func InitRepositoryEvents() (EventRepository, error) {
+	db, err := initDB()
+	if err != nil {
+		return nil, err
+	}
+	return &eventRepository{db: db}, nil
 }
 
-func (u *eventRepository) SelectFromEvents(w http.ResponseWriter, sqlQuery string, args []interface{}) error {
-	rows, err := u.db.Query(sqlQuery, args...)
+func (u *eventRepository) SelectFromEvents(ctx context.Context, w http.ResponseWriter, sqlQuery string, args []interface{}) error {
+	rows, err := u.db.QueryContext(ctx, sqlQuery, args...)
 	if err != nil {
 		log.Println("Error fetching events:", err)
 		return err
@@ -38,6 +42,7 @@ func (u *eventRepository) SelectFromEvents(w http.ResponseWriter, sqlQuery strin
 		var event models.EventSend
 		var id int64
 		var t time.Time
+
 		if err := rows.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &t); err != nil {
 			log.Println("Error while scanning row:", err)
 			return err
@@ -55,8 +60,8 @@ func (u *eventRepository) SelectFromEvents(w http.ResponseWriter, sqlQuery strin
 	return nil
 }
 
-func (u *eventRepository) InsertIntoEvents(event models.Event) error {
-	_, err := u.db.Exec("INSERT INTO events (user_id, action, metadata, time_event) VALUES ($1, $2, $3, $4);",
+func (u *eventRepository) InsertIntoEvents(ctx context.Context, event models.Event) error {
+	_, err := u.db.ExecContext(ctx, "INSERT INTO events (user_id, action, metadata, time_event) VALUES ($1, $2, $3, $4);",
 		event.UserID, event.Action, event.Metadata.Path, time.Now())
 	if err != nil {
 		log.Println("Error, insert data in event table")
@@ -66,20 +71,21 @@ func (u *eventRepository) InsertIntoEvents(event models.Event) error {
 	return nil
 }
 
-func (u *eventRepository) InsertIntoUserStats(start_time *time.Time) error {
-	row, err := u.db.Query("SELECT * FROM events WHERE time_event >= $1", start_time)
+func (u *eventRepository) InsertIntoUserStats(ctx context.Context, start_time *time.Time) error {
+	row, err := u.db.QueryContext(ctx, "SELECT * FROM events WHERE time_event >= $1", start_time)
 	if err != nil {
 		log.Println("Uncorrect select data from time")
 		return err
 	}
 	defer row.Close()
 
-	user_id_count := map[uint]int{}
+	user_id_count := map[uint]int64{}
 	for row.Next() {
 		log.Println("New row")
 
 		var event models.Event
 		var id int64
+
 		err := row.Scan(&id, &event.UserID, &event.Action, &event.Metadata.Path, &event.Timestamp)
 		if err != nil {
 			log.Println("Error, reading from event table")

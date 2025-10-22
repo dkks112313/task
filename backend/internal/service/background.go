@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"log"
 	"time"
 )
 
@@ -11,7 +13,13 @@ func (s *eventService) BackgroundTaskSaveToDatabase() {
 
 	go func() {
 		for range ticker.C {
-			s.repo.InsertIntoUserStats(&start_time)
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			err := s.repo.InsertIntoUserStats(ctx, &start_time)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}()
 }

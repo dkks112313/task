@@ -9,8 +9,13 @@ import (
 )
 
 func main() {
-	repo := repository.InitRepositoryEvents()
+	repo, err := repository.InitRepositoryEvents()
+	if err != nil {
+		panic(err)
+	}
 	serv := service.InitServiceEvents(repo)
+	serv.BackgroundTaskSaveToDatabase()
+
 	hand := handler.NewRoutes(serv)
 
 	mux := hand.HandlerEvents()

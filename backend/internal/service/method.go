@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,6 +17,7 @@ import (
 type EventService interface {
 	MethodGetForMainRoute(w http.ResponseWriter, r *http.Request)
 	MethodPostForMainRoute(w http.ResponseWriter, r *http.Request)
+	BackgroundTaskSaveToDatabase()
 }
 
 type eventService struct {
@@ -71,7 +73,10 @@ func (s *eventService) MethodGetForMainRoute(w http.ResponseWriter, r *http.Requ
 		sqlQuery += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	err := s.repo.SelectFromEvents(w, sqlQuery, args)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	err := s.repo.SelectFromEvents(ctx, w, sqlQuery, args)
 	if err != nil {
 		http.Error(w, "Uncorrect filter data", http.StatusBadRequest)
 	}
@@ -80,9 +85,12 @@ func (s *eventService) MethodGetForMainRoute(w http.ResponseWriter, r *http.Requ
 func (s *eventService) MethodPostForMainRoute(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	r.Body = http.MaxBytesReader(w, r.Body, 2*1024*1024)
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 		var event models.Event
 		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields()
+
 		err := decoder.Decode(&event)
 		if err != nil {
 			http.Error(w, "Uncorrect decode json", http.StatusBadRequest)
@@ -90,7 +98,10 @@ func (s *eventService) MethodPostForMainRoute(w http.ResponseWriter, r *http.Req
 			return
 		}
 
-		err = s.repo.InsertIntoEvents(event)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		err = s.repo.InsertIntoEvents(ctx, event)
 		if err != nil {
 			log.Println("Error, insert data in event table")
 			http.Error(w, "Uncorrect insert data in event table", http.StatusBadRequest)

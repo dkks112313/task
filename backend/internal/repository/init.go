@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func initDB() *sql.DB {
+func initDB() (*sql.DB, error) {
 	dbType := os.Getenv("DB_TYPE")
 	name := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
@@ -21,11 +21,13 @@ func initDB() *sql.DB {
 	dbOpen, err := sql.Open(dbType, dbConnect)
 	if err != nil {
 		log.Fatalln("Error opening db connection")
+		return nil, err
 	}
 
 	if err := dbOpen.Ping(); err != nil {
 		log.Fatalln("Error when checking data base connection")
+		return nil, err
 	}
 
-	return dbOpen
+	return dbOpen, nil
 }

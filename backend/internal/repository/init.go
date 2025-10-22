@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func InitDB() *sql.DB {
+func initDB() *sql.DB {
 	dbType := os.Getenv("DB_TYPE")
 	name := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")

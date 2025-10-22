@@ -21,7 +21,7 @@ type eventRepository struct {
 }
 
 func InitRepositoryEvents() EventRepository {
-	db := InitDB()
+	db := initDB()
 	return &eventRepository{db: db}
 }
 
